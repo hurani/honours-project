@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <h1>Tutorial 3</h1>
+
+    <div id="input">
+      <form>
+        <label for="tweet">Your tweet:</label>
+        <input
+          autocomplete="off"
+          type="text"
+          id="tweetInput"
+          name="tweet"
+        /><br /><br />
+        <input
+          style="background: rgb(77, 158, 250)"
+          onclick="addTweet()"
+          type="button"
+          value="Tweet"
+        />
+      </form>
+    </div>
+    `
+    <div id="timeline"></div>
+    <script>
+      var tweetsArr = [];
+
+      window.onload = function () {
+        refreshTweets();
+      };
+
+      var tweetInput = document.getElementById("tweetInput");
+      tweetInput.addEventListener("keypress", function (event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+        }
+      });
+
+      //Create a function responsible for adding the tweet to the array.
+      async function addTweet() {
+        let tweetText = document.querySelector("input").value.trim();
+        if (tweetText === "") {
+          alert("Tweet cannot be empty!");
+        } else if (tweetText.length > 280) {
+          alert("Tweet cannot be longer than 280 characters!");
+        } else {
+          await updateTweets({
+            name: "Anonymous",
+            tweet: tweetText,
+            timestamp: Date.now(),
+          });
+        }
+      }
+
+      async function deleteTweet(id) {
+        let url = "http://localhost:8000/tweets/" + id.toString();
+        await fetch(url, {
+          method: "DELETE",
+        });
+        await refreshTweets();
+      }
+
+      //Create a function for displaying the tweet on your webpage
+      function displayTweets() {
+        let tl = document.getElementById("timeline");
+
+        let tweetText = document.querySelector("input");
+        tweetText.value = "";
+
+        while (tl.firstChild) {
+          tl.removeChild(tl.lastChild);
+        }
+
+        for (let i = 0; i < tweetsArr.length; i++) {
+          let deleteBtn = document.createElement("button");
+          deleteBtn.innerHTML = "Delete";
+          //deleteBtn.addEventListener('click',deleteTweet(tweetsArr[i].ts))
+          deleteBtn.addEventListener(
+            "click",
+            function () {
+              var id = tweetsArr[i].id;
+              deleteTweet(id);
+            },
+            false
+          );
+
+          let tweet = document.createElement("p");
+          tweet.innerHTML =
+            "(ID: " +
+            tweetsArr[i].id +
+            ") " +
+            "Name: " +
+            tweetsArr[i].name +
+            "<br/>" +
+            tweetsArr[i].tweet +
+            "<br/>" +
+            new Date(tweetsArr[i].timestamp).toDateString();
+
+          tl.appendChild(tweet);
+          tl.append(deleteBtn);
+        }
+      }
+
+      async function refreshTweets() {
+        try {
+          let response = await fetch("http://localhost:8000/tweets");
+          let tweets = await response.json();
+          tweetsArr = tweets;
+          displayTweets();
+        } catch {
+          console.error("There was a problem with fetching the tweets.");
+        }
+      }
+
+      async function updateTweets(tweet) {
+        try {
+          let url = "http://localhost:8000/tweets";
+
+          await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(tweet),
+          });
+
+          refreshTweets();
+        } catch {
+          console.error("There was a problem with posting the tweet.");
+        }
+      }
+    </script>
+  </body>
+</html>

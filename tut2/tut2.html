@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <h1>Tutorial 2</h1>
+
+    <div id="input">
+      <form>
+        <label for="tweet">Your tweet:</label>
+        <input
+          autocomplete="off"
+          type="text"
+          id="tweet"
+          name="tweet"
+        /><br /><br />
+        <input
+          style="background: rgb(77, 158, 250)"
+          onclick="addTweet()"
+          type="button"
+          value="Tweet"
+        />
+      </form>
+    </div>
+    `
+    <div id="timeline"></div>
+    <script>
+      var tweetsArr = [];
+      // Create a function responsible for adding the tweet to the array.
+      function addTweet() {
+        let tweetText = document.querySelector("input").value.trim();
+        if (tweetText === "") {
+          alert("Tweet cannot be empty!");
+        } else if (tweetText.length > 280) {
+          alert("Tweet cannot be longer than 280 characters!");
+        } else {
+          let tweet = {
+            name: "Anonymous",
+            tweet: tweetText,
+            timestamp: Date.now(),
+          };
+
+          tweetsArr.push(tweet);
+          console.log(tweetsArr);
+          displayTweets();
+        }
+      }
+      // Create a function for displaying the tweet on your webpage
+      function displayTweets() {
+        let tl = document.getElementById("timeline");
+        let tweet = document.createElement("p");
+        for (let i = 0; i < tweetsArr.length; i++) {
+          console.log(tweetsArr[i]);
+          tweet.innerHTML =
+            "Name: " +
+            tweetsArr[i].name +
+            "<br/>" +
+            tweetsArr[i].tweet +
+            "<br/>" +
+            new Date(tweetsArr[i].timestamp).toDateString();
+          tl.appendChild(tweet);
+        }
+      }
+    </script>
+  </body>
+</html>
