@@ -8,6 +8,3 @@ tut 7 - sockets
 tut 8 - css
 tut 9 - http codes error checking
 tut 10 - deployment
-
-references:
-- socket.io docs
