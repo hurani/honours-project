@@ -1,0 +1,45 @@
+button, input[type="submit"], input[type="reset"] {
+	background: none;
+	color: inherit;
+	border: none;
+	padding: 0;
+	cursor: pointer;
+	outline: inherit;
+}
+
+.tweetButton {
+    background-color: #00aced;
+    border-radius: 100px;
+    color: #fff;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1.2;
+    margin-bottom: 0;
+    padding: 8px 16px;
+    text-align: center;
+    text-decoration: none;
+    vertical-align: middle;
+    place-self: end;
+    margin-top: 5px;
+}
+
+.tweetForm {
+    display: flex;
+    flex-direction: column;
+}
+
+#tweetInput {
+    border: 0px;
+    border-bottom: 1px solid #ccc;
+    font-size: 14px;
+    height: 30px;
+    padding: 4px;
+    width: 100%;
+    outline: none;
+}
+
+#input {
+    max-width: 500px;
+}
