@@ -14,7 +14,12 @@ app.get("/tweets", async (req, res) => {
 });
 
 app.post("/tweets", async (req, res) => {
-  await tweetsCollection.insertOne(req.body);
+  try {
+    await tweetsCollection.insertOne(req.body);
+  } catch (e) {
+    console.error(e);
+    res.end();
+  }
   res.end();
 });
 
@@ -26,11 +31,38 @@ app.delete("/tweets/:tweetId", async (req, res) => {
 console.log("Connecting to mongo...");
 MongoClient.connect(
   "mongodb+srv://karim:carleton@cluster0.iwmx3.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
-  function (err, client) {
+  async (err, client) => {
     if (err) throw err;
     console.log("Successfully connected to mongo server!");
+    const db = client.db("tut5");
 
-    tweetsCollection = client.db("tut4").collection("tweets");
+    try {
+      await db.createCollection("tweets", {
+        validator: {
+          $jsonSchema: {
+            bsonType: "object",
+            required: ["name", "tweet", "timestamp"],
+            properties: {
+              name: {
+                bsonType: "string",
+                description: "must be a string and is required",
+              },
+              tweet: {
+                bsonType: "string",
+                description: "must be a string and is required",
+                minLength: 1,
+                maxLength: 280,
+              },
+            },
+          },
+        },
+      });
+    } catch (err) {
+      console.log("Collection already exists");
+    }
+    
+    
+    tweetsCollection = db.collection("tweets");
     app.listen(8000, () => {
       console.log("Listening on http://localhost:8000");
     });

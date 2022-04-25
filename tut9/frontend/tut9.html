@@ -1,37 +1,51 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <link rel="stylesheet" href="./tut9.css" />
+  </head>
   <body>
-    <h1>Tutorial 4</h1>
-
+    <h1>Tutorial 9</h1>
+    <div id="newTweetsBanner" style="display: none">
+      <button onclick="onNewTweets()">
+        There are new tweets! Click here to refresh
+      </button>
+    </div>
     <div id="input">
-      <form>
-        <label for="tweet">Your tweet:</label>
+      <form class="tweetForm">
         <input
           autocomplete="off"
           type="text"
           id="tweetInput"
           name="tweet"
-        /><br /><br />
-        <input
-          style="background: rgb(77, 158, 250)"
-          onclick="addTweet()"
-          type="button"
-          value="Tweet"
+          placeholder="What's happening?"
         />
+        <button class="tweetButton" onclick="addTweet()" type="button">
+          Tweet
+        </button>
       </form>
     </div>
     <div id="timeline"></div>
+    <script src="http://localhost:8000/socket.io/socket.io.js"></script>
     <script>
+      var socket = io('http://localhost:8000');
       var tweetsArr = [];
 
-      window.onload = function () {
+      const setThereAreNewTweets = () => {
+        document.getElementById('newTweetsBanner').style.display = 'block';
+      };
+
+      const onNewTweets = () => {
+        document.getElementById('newTweetsBanner').style.display = 'none';
         refreshTweets();
       };
 
-      var tweetInput = document.getElementById('tweetInput');
+      socket.on('newTweet', function (newTweet) {
+        setThereAreNewTweets();
+      });
 
+      var tweetInput = document.getElementById('tweetInput');
       //Create a function responsible for adding the tweet to the array.
-      async function addTweet() {
+      async function addTweet(e) {
         let tweetText = document.querySelector('input').value.trim();
         if (tweetText === '') {
           alert('Tweet cannot be empty!');
@@ -43,15 +57,21 @@
             tweet: tweetText,
             timestamp: Date.now(),
           });
+          socket.emit('newTweet', true);
+          document.querySelector('input').value = '';
         }
       }
 
       async function deleteTweet(id) {
         let url = 'http://localhost:8000/tweets/' + id.toString();
-        await fetch(url, {
+        const resp = await fetch(url, {
           method: 'DELETE',
         });
-        await refreshTweets();
+        if (resp.status === 200) {
+          await refreshTweets();
+        } else {
+          alert('Could not delete tweet');
+        }
       }
 
       //Create a function for displaying the tweet on your webpage
@@ -59,7 +79,6 @@
         let tl = document.getElementById('timeline');
 
         let tweetText = document.querySelector('input');
-        tweetText.value = '';
 
         while (tl.firstChild) {
           tl.removeChild(tl.lastChild);
@@ -97,12 +116,17 @@
         }
       }
 
+      window.onload = refreshTweets;
+
       async function refreshTweets() {
         try {
           let response = await fetch('http://localhost:8000/tweets');
-          let tweets = await response.json();
-          tweetsArr = tweets;
-          displayTweets();
+          if (response.status === 200) {
+            tweetsArr = await response.json();
+            displayTweets();
+          } else {
+            alert('Could not get tweets');
+          }
         } catch {
           console.error('There was a problem with fetching the tweets.');
         }
@@ -112,13 +136,19 @@
         try {
           let url = 'http://localhost:8000/tweets';
 
-          await fetch(url, {
+          const resp = await fetch(url, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify(tweet),
           });
+
+          if (resp.status === 201) {
+            await refreshTweets();
+          } else {
+            alert('Could not post tweet');
+          }
 
           refreshTweets();
         } catch {

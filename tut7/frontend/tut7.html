@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <html>
   <body>
-    <h1>Tutorial 4</h1>
-
+    <h1>Tutorial 7</h1>
+    <div id="newTweetsBanner" style="display: none">
+      <button onclick="onNewTweets()">
+        There are new tweets! Click here to refresh
+      </button>
+    </div>
     <div id="input">
       <form>
         <label for="tweet">Your tweet:</label>
@@ -21,12 +25,23 @@
       </form>
     </div>
     <div id="timeline"></div>
+    <script src="http://localhost:8000/socket.io/socket.io.js"></script>
     <script>
+      var socket = io('http://localhost:8000');
       var tweetsArr = [];
 
-      window.onload = function () {
+      const setThereAreNewTweets = () => {
+        document.getElementById('newTweetsBanner').style.display = 'block';
+      };
+
+      const onNewTweets = () => {
+        document.getElementById('newTweetsBanner').style.display = 'none';
         refreshTweets();
       };
+
+      socket.on('newTweet', function (newTweet) {
+        setThereAreNewTweets();
+      });
 
       var tweetInput = document.getElementById('tweetInput');
 
@@ -43,6 +58,8 @@
             tweet: tweetText,
             timestamp: Date.now(),
           });
+          socket.emit('newTweet', true);
+          document.querySelector('input').value = '';
         }
       }
 
@@ -59,7 +76,6 @@
         let tl = document.getElementById('timeline');
 
         let tweetText = document.querySelector('input');
-        tweetText.value = '';
 
         while (tl.firstChild) {
           tl.removeChild(tl.lastChild);
@@ -96,6 +112,8 @@
           tl.append(deleteBtn);
         }
       }
+
+      window.onload = refreshTweets;
 
       async function refreshTweets() {
         try {

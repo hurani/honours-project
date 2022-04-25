@@ -2,6 +2,10 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const { MongoClient, ObjectId } = require("mongodb");
+const http = require('http');
+
+const server = http.createServer(app);
+const { Server } = require("socket.io");
 
 app.use(cors());
 app.use(express.json());
@@ -27,6 +31,19 @@ app.delete("/tweets/:tweetId", async (req, res) => {
   await tweetsCollection.deleteOne({ _id: ObjectId(req.params.tweetId) });
   res.end();
 });
+
+const io = new Server(server, {cors: {origin: "*"}});
+
+io.on('connection', (socket) => {
+  console.log('a user connected');
+  socket.on('disconnect', () => {
+    console.log('user disconnected');
+  });
+  socket.on('newTweet', (msg) => {
+    console.log('newTweet');
+    socket.broadcast.emit('newTweet', true);
+  });
+})
 
 console.log("Connecting to mongo...");
 MongoClient.connect(
@@ -63,8 +80,9 @@ MongoClient.connect(
     
     
     tweetsCollection = db.collection("tweets");
-    app.listen(8000, () => {
+    server.listen(8000, () => {
       console.log("Listening on http://localhost:8000");
     });
+    
   }
 );

@@ -2,6 +2,10 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const { MongoClient, ObjectId } = require("mongodb");
+const http = require('http');
+
+const server = http.createServer(app);
+const { Server } = require("socket.io");
 
 app.use(cors());
 app.use(express.json());
@@ -10,7 +14,7 @@ let tweetsCollection;
 
 app.get("/tweets", async (req, res) => {
   const tweets = await tweetsCollection.find({}).toArray();
-  res.json(tweets);
+  res.status(200).json(tweets);
 });
 
 app.post("/tweets", async (req, res) => {
@@ -18,15 +22,28 @@ app.post("/tweets", async (req, res) => {
     await tweetsCollection.insertOne(req.body);
   } catch (e) {
     console.error(e);
-    res.end();
+    res.status(500).end();
   }
-  res.end();
+  res.status(201).end();
 });
 
 app.delete("/tweets/:tweetId", async (req, res) => {
   await tweetsCollection.deleteOne({ _id: ObjectId(req.params.tweetId) });
-  res.end();
+  res.status(200).end();
 });
+
+const io = new Server(server, {cors: {origin: "*"}});
+
+io.on('connection', (socket) => {
+  console.log('a user connected');
+  socket.on('disconnect', () => {
+    console.log('user disconnected');
+  });
+  socket.on('newTweet', (msg) => {
+    console.log('newTweet');
+    socket.broadcast.emit('newTweet', true);
+  });
+})
 
 console.log("Connecting to mongo...");
 MongoClient.connect(
@@ -63,8 +80,9 @@ MongoClient.connect(
     
     
     tweetsCollection = db.collection("tweets");
-    app.listen(8000, () => {
+    server.listen(process.env.PORT || 8000, () => {
       console.log("Listening on http://localhost:8000");
     });
+    
   }
 );
